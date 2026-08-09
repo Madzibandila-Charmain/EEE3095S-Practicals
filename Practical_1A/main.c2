@@ -165,7 +165,7 @@ void TIM16_IRQHandler(void)
 {
     HAL_TIM_IRQHandler(&htim16);   // Clears the update flag
     /* TODO: Set the global timer_event flag to signal the main loop */
-    
+    timer_event = 1;
 }
 
 /**
