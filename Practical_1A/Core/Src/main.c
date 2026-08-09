@@ -143,7 +143,17 @@ static void MX_GPIO_Init(void)
   */
 void TIM16_IRQHandler(void)
 {
-/*Toggle the pin*/
+    if (__HAL_TIM_GET_FLAG(&htim16, TIM_FLAG_UPDATE) != RESET)
+    {
+        if (__HAL_TIM_GET_IT_SOURCE(&htim16, TIM_IT_UPDATE) != RESET)
+        {
+            /* Clears the interrupt flag */
+            __HAL_TIM_CLEAR_IT(&htim16, TIM_IT_UPDATE);
+
+            /* Toggles LED0 */
+            HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_0);
+        }
+    }
 }
 
 /**
