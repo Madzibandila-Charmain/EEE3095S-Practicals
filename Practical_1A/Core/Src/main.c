@@ -104,9 +104,9 @@ void SystemClock_Config(void)
 static void MX_TIM16_Init(void)
 {
   htim16.Instance = TIM16;
-  htim16.Init.Prescaler =_______ // insert your psc value
+  htim16.Init.Prescaler = 7999;
   htim16.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim16.Init.Period =_______          // insert your calculated period or ARR
+  htim16.Init.Period = 999;
   htim16.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim16.Init.RepetitionCounter = 0;
   htim16.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
