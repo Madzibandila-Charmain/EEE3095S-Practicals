@@ -121,7 +121,21 @@ static void MX_TIM16_Init(void)
   */
 static void MX_GPIO_Init(void)
 {
-/*Insert PB0 initialization code*/
+    GPIO_InitTypeDef GPIO_InitStruct = {0};
+
+    /* Enable GPIOB clock */
+    __HAL_RCC_GPIOB_CLK_ENABLE();
+
+    /* Initially turn LED0 OFF */
+    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_RESET);
+
+    /* Configure PB0 as output */
+    GPIO_InitStruct.Pin = GPIO_PIN_0;
+    GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+
+    HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 }
 
 /**
