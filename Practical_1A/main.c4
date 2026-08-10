@@ -145,6 +145,28 @@ void handle_buttons(void)
     button_state[1] = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_1);
     button_state[2] = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_2);
     button_state[3] = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_3);
+
+    /* Implement debounce logic for PA0. Toggle the timer speed between 500ms and 1000ms. */
+    if (button_state[0] == GPIO_PIN_RESET)
+    {
+        if ((now - last_button_time[0]) >= DEBOUNCE_MS)
+        {
+            last_button_time[0] = now;
+
+            if (speed_state == 0)
+            {  
+                //1 second -> 0.5 seconds
+                change_timer_period(500);
+                speed_state = 1;
+            }
+            else
+            {
+                //0.5 seconds -> 1 second
+                change_timer_period(1000);
+                speed_state = 0;
+            }
+        }
+    }
 }
 
 void set_mode(LED_Mode new_mode)
