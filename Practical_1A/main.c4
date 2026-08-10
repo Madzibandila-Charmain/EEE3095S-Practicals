@@ -167,6 +167,39 @@ void handle_buttons(void)
             }
         }
     }
+
+    /* Implement debounce logic for PA1. Call set_mode(MODE_1). */
+    if (button_state[1] == GPIO_PIN_RESET)
+    {
+        if ((now - last_button_time[1]) >= DEBOUNCE_MS)
+        {
+            last_button_time[1] = now;
+
+            set_mode(MODE_1);
+        }
+    }
+    
+    /* Implement debounce logic for PA2. Call set_mode(MODE_2). */
+    if (button_state[2] == GPIO_PIN_RESET)
+    {
+        if ((now - last_button_time[2]) >= DEBOUNCE_MS)
+        {
+            last_button_time[2] = now;
+
+            set_mode(MODE_2);
+        }
+    }
+    
+    /* Implement debounce logic for PA3. Call set_mode(MODE_3). */
+    if (button_state[3] == GPIO_PIN_RESET)
+    {
+        if ((now - last_button_time[3]) >= DEBOUNCE_MS)
+        {
+            last_button_time[3] = now;
+
+            set_mode(MODE_3);
+        }
+    }
 }
 
 void set_mode(LED_Mode new_mode)
