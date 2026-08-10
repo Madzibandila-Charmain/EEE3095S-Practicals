@@ -93,7 +93,15 @@ void clear_all_leds(void)
 
 void turn_on_led(uint8_t index)
 {
-    /* TODO: Set the specified LED pin to GPIO_PIN_SET */
+    /* Set the specified LED pin to GPIO_PIN_SET */
+    if (index < 8)
+    {
+        HAL_GPIO_WritePin(
+            led_ports[index],
+            led_pins[index],
+            GPIO_PIN_SET
+        );
+    }
 }
 
 void turn_off_led(uint8_t index)
