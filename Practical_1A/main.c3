@@ -65,8 +65,11 @@ void update_led_pattern(void)
 void change_timer_period(uint32_t new_period_ms)
 {
 // TODO: Calculate the new ARR value using your formula.
+uint32_t new_period_s = new_period_ms / 1000;
+//time period = ((PSC+1)(ARR+1))/System Clock
+uint32_t calculated_ARR = ((new_period_s * (8000000))/(7999 +1)) - 1;
 // Note: Timer clock is 1000 Hz (Prescaler is 7999).
-uint32_t new_arr = 0; // Replace 0 with your calculation.
+uint32_t new_arr = calculated_ARR; // Replace 0 with your calculation.
 
 // TODO: Update the TIM16 ARR register directly.
 
