@@ -119,12 +119,18 @@ void turn_off_led(uint8_t index)
 
 void change_timer_period(uint32_t new_period_ms)
 {
-    /* TODO: Calculate the new ARR value based on the requested millisecond period */
+    uint32_t new_arr;
+
+    /* Calculate the new ARR value based on the requested millisecond period */
+    new_arr = new_period_ms - 1;
     
-    /* TODO: Update the TIM16 ARR register directly */
+    /* Update the TIM16 ARR register directly */
+    TIM16->ARR = new_arr;
     
-    /* TODO: Reset the TIM16 CNT register to 0 */
-    
+    /* Reset the TIM16 CNT register to 0 */
+    TIM16->CNT = 0;
+
+    /* Stores the period for ref */
     current_period_ms = new_period_ms;
 }
 
