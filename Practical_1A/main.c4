@@ -138,15 +138,13 @@ void handle_buttons(void)
 {
     uint32_t now = HAL_GetTick();
 
-    /* TODO: Read the state of all four buttons (PA0 to PA3) */
-    
-    /* TODO: Implement debounce logic for PA0. Toggle the timer speed between 500ms and 1000ms. */
-    
-    /* TODO: Implement debounce logic for PA1. Call set_mode(MODE_1). */
-    
-    /* TODO: Implement debounce logic for PA2. Call set_mode(MODE_2). */
-    
-    /* TODO: Implement debounce logic for PA3. Call set_mode(MODE_3). */
+    /* Read the state of all four buttons (PA0 to PA3) */
+    GPIO_PinState button_state[4];
+
+    button_state[0] = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0);
+    button_state[1] = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_1);
+    button_state[2] = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_2);
+    button_state[3] = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_3);
 }
 
 void set_mode(LED_Mode new_mode)
