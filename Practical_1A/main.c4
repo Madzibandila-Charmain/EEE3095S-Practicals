@@ -228,7 +228,39 @@ void set_mode(LED_Mode new_mode)
 
 void mode1_update(void)
 {
-    /* TODO: Implement the standard running light sequence (Task 3 logic) */
+    /* Implement the standard running light sequence (Task 3 logic) */
+    clear_all_leds();
+
+    //Turn ON current LED.
+    turn_on_led(current_led);
+
+    //Move according to direction.
+    if (direction == 1)
+    {
+        if (current_led == 7)
+        {
+            // Reverse direction and move to LED6.
+            direction = -1;
+            current_led = 6;
+        }
+        else
+        {
+            current_led++;
+        }
+    }
+    else
+    {
+        if (current_led == 0)
+        {
+            //Reverse direction and move to LED1.
+            direction = 1;
+            current_led = 1;
+        }
+        else
+        {
+            current_led--;
+        }
+    }
 }
 
 void mode2_update(void)
