@@ -206,9 +206,24 @@ void set_mode(LED_Mode new_mode)
 {
     current_mode = new_mode;
     
-    /* TODO: Clear all LEDs to ensure a clean slate */
+    /* Clear all LEDs to ensure a clean slate */
+    clear_all_leds();
     
-    /* TODO: Reset mode-specific tracking variables (like current_led, direction, or sparkle_state) */
+    /* Reset mode-specific tracking variables (like current_led, direction, or sparkle_state) */
+    
+    // Reset Mode 1  and Mode 2 position.
+    current_led = 0;
+    direction = 1;
+
+    // Reset Mode 3 state machine.
+    sparkle_state = SPARKLE_IDLE;
+    sparkle_pattern = 0;
+    sparkle_num_leds_on = 0;
+    sparkle_off_index = 0;
+
+    //Reset timing values
+    sparkle_display_until = 0;
+    sparkle_next_off_time = 0;
 }
 
 void mode1_update(void)
