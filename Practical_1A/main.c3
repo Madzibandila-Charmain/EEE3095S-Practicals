@@ -72,8 +72,10 @@ uint32_t calculated_ARR = ((new_period_s * (8000000))/(7999 +1)) - 1;
 uint32_t new_arr = calculated_ARR; // Replace 0 with your calculation.
 
 // TODO: Update the TIM16 ARR register directly.
+TIM16->ARR = calculated_ARR;
 
 // TODO: Reset the TIM16 CNT register to 0.
+TIM16->CNT = 0;
 
 // Store the new ARR value for reference
 current_arr = new_arr;
