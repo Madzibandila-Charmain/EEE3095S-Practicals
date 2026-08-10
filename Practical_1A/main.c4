@@ -309,23 +309,96 @@ void mode3_update(void)
 
     switch (sparkle_state) {
         case SPARKLE_IDLE:
-            /* TODO: Generate a random 8-bit pattern using rand() */
-            /* TODO: Turn on the LEDs according to the generated pattern */
-            /* TODO: Store the indices of the active LEDs in the sparkle_leds_on array */
+            /* Generate a random 8-bit pattern using rand() */
+            sparkle_pattern = (uint8_t)(rand() & 0xFF);
+
+            // Reset number of LEDs currently ON.
+            clear_all_leds();
+
+            //Reset number of LEDs currently ON.
+            sparkle_num_leds_on = 0;
+
+            /* Turn on the LEDs according to the generated pattern */
+            /* Store the indices of the active LEDs in the sparkle_leds_on array */
+            for (uint8_t i = 0; i < 8; i++)
+            {
+                if (sparkle_pattern & (1 << i))
+                {
+                    turn_on_led(i);
+                    
+                    // Remember that this LED is ON.
+                    sparkle_leds_on[sparkle_num_leds_on] = i;
+
+                    sparkle_num_leds_on++;
+                }
+            }
+
             /* TODO: Generate a random display duration between 100ms and 1500ms */
-            /* TODO: Transition to SPARKLE_DISPLAY state */
+            uint32_t display_duration = 100 + (rand() % 1401);
+
+            // Stores the time which the display should finish
+            sparkle_display_until = now + display_duration;
+
+            /* Transition to SPARKLE_DISPLAY state */
+            sparkle_state = SPARKLE_DISPLAY;
+
             break;
 
         case SPARKLE_DISPLAY:
-            /* TODO: Wait for the random display duration to elapse using HAL_GetTick() */
-            /* TODO: Once elapsed, transition to SPARKLE_TURN_OFF state */
+
+            /* Wait for the random display duration to elapse using HAL_GetTick() */
+            /* Once elapsed, transition to SPARKLE_TURN_OFF state */
+            if ((int32_t)(now - sparkle_display_until) >= 0)
+            {  
+                sparkle_off_index = 0;
+
+                /*
+                   If there are LEDs to turn off, create the first random delay.
+                */
+                if (sparkle_num_leds_on > 0)
+                {
+                    sparkle_next_off_time =
+                        now + 100 + (rand() % 51);
+
+                    sparkle_state = SPARKLE_TURN_OFF;
+                }
+                else
+                {
+                    // start another pattern
+                    sparkle_state = SPARKLE_IDLE;
+                }
+            }
+
             break;
 
         case SPARKLE_TURN_OFF:
-            /* TODO: Wait for the random turn-off delay (100ms to 150ms) to elapse */
-            /* TODO: Turn off one LED from the sparkle_leds_on array */
-            /* TODO: Generate a new random turn-off delay for the next LED */
-            /* TODO: If all LEDs are turned off, transition back to SPARKLE_IDLE state */
+            
+            // Check whether the random delay has expired.
+            if ((int32_t)(now - sparkle_next_off_time) >= 0)
+            {
+                
+                // Turn off one of the LEDs that was originally ON.
+                turn_off_led(sparkle_leds_on[sparkle_off_index]);
+                
+                sparkle_off_index++;
+
+                // Checks if all LEDs have been turned off?
+                if (sparkle_off_index >= sparkle_num_leds_on)
+                {
+                    
+                    // Yes, Start a completely new random pattern.
+                    sparkle_state = SPARKLE_IDLE;
+                }
+                else
+                {
+                    /*
+                       There are still LEDs to turn off.
+                       Generate another random delay:
+                    */
+                    sparkle_next_off_time = now + 100 + (rand() % 51);
+                }
+            }
+
             break;
 
         default:
