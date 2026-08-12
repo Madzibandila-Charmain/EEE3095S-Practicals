@@ -9,12 +9,16 @@
 #define TIM16_PSC_VALUE   7
 #define TIM16_ARR_VALUE   99
 
+TIM_HandleTypeDef htim16;
+GPIO_InitTypeDef GPIO_InitStruct = {0};
+
 static void GPIO_Init(void);
 static void TIM16_Init(void);
 
 int main(void)
 {
     /* TODO: Initialize GPIO and TIM16 peripherals */
+    
     
     while (1)
     {
@@ -25,23 +29,46 @@ int main(void)
 static void GPIO_Init(void)
 {
     /* TODO: Enable GPIOB clock */
+    __HAL_RCC_GPIOB_CLK_ENABLE();
     
     /* TODO: Configure PB5 as a general purpose output, push-pull, medium speed, no pull-up/pull-down */
+    GPIO_InitStruct.Pin = GPIO_PIN_5;
+    GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
     
     /* TODO: Ensure PB5 starts low */
+    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, GPIO_PIN_RESET);
 }
 
 static void TIM16_Init(void)
 {
     /* TODO: Enable TIM16 clock */
+    __HAL_RCC_TIM16_CLK_ENABLE();
     
     /* TODO: Set Prescaler and ARR values for 10 kHz interrupt frequency */
-    
-    /* TODO: Clear any pending update flag and enable the update interrupt (DIER) */
+    htim16.Instance = TIM16;
+    htim16.Init.Prescaler = 7999;
+    htim16.Init.CounterMode = TIM_COUNTERMODE_UP;
+    htim16.Init.Period = 999;
+    htim16.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+    htim16.Init.RepetitionCounter = 0;
+    htim16.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
+
+    if (HAL_TIM_Base_Init(&htim16) != HAL_OK) {
+        Error_Handler();
+    }
+  
+  /* TODO: Clear any pending update flag and enable the update interrupt (DIER) */
+    __HAL_TIM_CLEAR_FLAG(&htim16, TIM_FLAG_UPDATE); 
+    __HAL_TIM_ENABLE_IT()&htim16, TIM_FLAG_UPDATE;
+    //LL_TIM_DIER_UIE;
     
     /* TODO: Configure NVIC priority and enable TIM16 interrupt */
-    
+    HAL_NVIC_SetPriority(TIM16_IRQn, 0,0);
+    HAL_NVIC_EnableIRQ(TIM16_IRQn);
     /* TODO: Enable the counter to start the interrupt stream */
+   HAL_TIM_Base_Start_IT(&htim16)
 }
 
 void TIM16_IRQHandler(void)
@@ -49,13 +76,26 @@ void TIM16_IRQHandler(void)
     static uint8_t counter = 0;
     
     /* TODO: Check if the update interrupt flag (UIF) is set */
-    
+        if (LL_TIM_isActiveFlag_UPDATE(TIM16)==1){
         /* TODO: Clear the update interrupt flag */
+            LL_TIM_ClearFlag_UPDATE(TIM16);
+            /* TODO: Implement 30% duty cycle logic: 
+             * If counter < 30, drive PB5 high using BSRR.
+             * If counter >= 30, drive PB5 low using BRR/BSRR. */
+             if (counter<30){
+                LL_GPIO_SetOutputPin(GPIOB, GPIO_PIN_5);
+             }
+             else if(counter>=30){
+                LL_GPIO_ResetOutputPin(GPIOB, GPIO_PIN_5);
+             }
+
+             /* TODO: Increment counter and reset to zero when counter reaches 100 */
+             counter++;
+             if(counter>=100){
+                 counter=0;
+             }
+        }
+
         
-        /* TODO: Implement 30% duty cycle logic: 
-         * If counter < 30, drive PB5 high using BSRR.
-         * If counter >= 30, drive PB5 low using BRR/BSRR. */
-        
-        /* TODO: Increment counter and reset to zero when counter reaches 100 */
     
 }
