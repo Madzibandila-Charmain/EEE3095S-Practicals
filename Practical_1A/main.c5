@@ -10,9 +10,10 @@ int main(void)
     HAL_Init(); // still fine to call - only sets up SysTick/core clocks
     GPIO_Init();
     ADC_Init();
-    
+
     /* TODO: Start continuous conversion using ADC1 control register */
-    
+    ADC1->CR |= ADC_CR_ADSTART;
+
     while (1)
     {
         /* everything happens in the ISR */
@@ -22,27 +23,64 @@ int main(void)
 /* ---------- GPIO Configuration ---------- */
 static void GPIO_Init(void)
 {
-    /* TODO: Enable clocks for GPIOA and GPIOB */
-    
-    /* TODO: Configure PA5 as Analog mode (11) for ADC_IN5 */
-    
-    /* TODO: Configure PB0-PB7 as General purpose outputs (01) and clear ODR initially */
+    /* Enable clocks for GPIOA and GPIOB */
+    __HAL_RCC_GPIOA_CLK_ENABLE();
+    __HAL_RCC_GPIOB_CLK_ENABLE();
+
+    /* Configure PA5 as Analog mode (11) for ADC_IN5 */
+    GPIO_InitTypeDef GPIO_InitStruct = {0};
+
+    GPIO_InitStruct.Pin = GPIO_PIN_5;
+    GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+    /* Configure PB0-PB7 as General purpose outputs (01) and clear ODR initially */
+    GPIO_InitStruct.Pin = GPIO_PIN_0 | GPIO_PIN_1 | GPIO_PIN_2 | GPIO_PIN_3 | GPIO_PIN_4 | GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7;
+    GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+    GPIOB->ODR &= ~(0xFF); // Clear the ODR register
 }
 
 /* ---------- ADC Configuration ---------- */
 static void ADC_Init(void)
 {
-    /* TODO: Enable APB2 clock for ADC1 */
-    
-    /* TODO: Ensure ADC is disabled, then run calibration */
-    
-    /* TODO: Select channel 5 (PA5) and configure sampling time */
-    
-    /* TODO: Configure 12-bit resolution, right alignment, and continuous conversion mode */
-    
-    /* TODO: Enable end-of-conversion interrupt and configure NVIC priorities */
-    
-    /* TODO: Enable the ADC and wait for the ADRDY flag */
+    /* Enable APB2 clock for ADC1 */
+    RCC->APB2ENR |= RCC_APB2ENR_ADCEN;
+
+    /* Ensure ADC is disabled, then run calibration */;
+    if (ADC1->CR & ADC_CR_ADEN)
+    { // Check if ADC is enabled
+        // if it is enabled -> disable it
+        ADC1->CR |= ADC_CR_ADDIS;
+        while ((ADC1->CR & ADC_CR_ADEN) == 1)
+            ; // wait for it to disable
+    }
+
+    ADC1->CR |= ADC_CR_ADCAL; // Calibrate ADC
+    while ((ADC1->CR & ADC_CR_ADCAL) == 1)
+        ; // wait for calibration to complete
+
+    /* Select channel 5 (PA5) and configure sampling time */
+    ADC1->CHSELR |= ADC_CHSELR_CHSEL5;
+    ADC1->SMPR &= ~ADC_SMPR_SMP;
+    ADC1->SMPR |= ADC_SMPR_SMP_1;
+
+    /* Configure 12-bit resolution, right alignment, and continuous conversion mode */
+    ADC1->CFGR1 &= ~ADC_CFGR1_RES;   // 12-bit res
+    ADC1->CFGR1 &= ~ADC_CFGR1_ALIGN; // Right alignment
+    ADC1->CFGR1 |= ADC_CFGR1_CONT;   // continous conversion mode
+
+    /* Enable end-of-conversion interrupt and configure NVIC priorities */
+    ADC1->IER |= ADC_IER_EOCIE;          // Generate interrupt when conversion is done
+    NVIC_SetPriority(ADC1_COMP_IRQn, 1); // IDK ABOUT THIS
+    NVIC_EnableIRQ(ADC1_COMP_IRQn);      // Set the interrupt handler
+
+    /* Enable the ADC and wait for the ADRDY flag */
+    ADC1->CR |= ADC_CR_ADEN; // Enable the ADC
+    while ((ADC1->ISR & ADC_ISR_ADRDY) == 0); // Wait for the ADC to be ready
 }
 
 /* ---------- Interrupt Service Routine ---------- */
@@ -50,17 +88,17 @@ void ADC1_COMP_IRQHandler(void)
 {
     if (ADC1->ISR & ADC_ISR_EOC)
     {
-        /* TODO: Read the raw 12-bit ADC value from the data register (DR) */
-        uint32_t adc_val = 0; // Replace with register read
-        
-        /* TODO: Scale the raw value proportionally to a number of LEDs (0 - 8) */
-        uint8_t leds_to_light = 0; // Replace with your scaling calculation
-        
-        /* TODO: Build the bar-graph bit pattern using bitwise shifting */
-        uint8_t output_pattern = 0; // Replace with your bit pattern logic
-        
-        /* TODO: Drive PB0-PB7 using the helper function */
-        // write_led_byte(output_pattern);
+        /* Read the raw 12-bit ADC value from the data register (DR) */
+        uint32_t adc_val = ADC1->DR; // Replace with register read
+
+        /* Scale the raw value proportionally to a number of LEDs (0 - 8) */
+        uint8_t leds_to_light = (adc_val * 8) / 4095; // Replace with your scaling calculation
+
+        /* Build the bar-graph bit pattern using bitwise shifting */
+        uint8_t output_pattern = (1 << leds_to_light) - 1; // Replace with your bit pattern logic
+
+        /* Drive PB0-PB7 using the helper function */
+        write_led_byte(output_pattern);
     }
 }
 
