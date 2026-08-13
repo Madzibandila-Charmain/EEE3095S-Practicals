@@ -27,6 +27,9 @@ GPIOB, GPIOB, GPIOB, GPIOB};
 uint16_t led_pins[8] = {GPIO_PIN_0, GPIO_PIN_1, GPIO_PIN_2, GPIO_PIN_3,
 GPIO_PIN_4, GPIO_PIN_5, GPIO_PIN_6, GPIO_PIN_7};
 
+//Determines when the button is released
+uint8_t button_ready = 1;
+
 // TODO: Define your debounce delay based on your oscilloscope measurement
 #define DEBOUNCE_MS 30
 uint32_t last_button_press_time = 0;
@@ -113,32 +116,46 @@ current_arr = new_arr;
 
 void handle_button_press(void)
 {
-// TODO: Get the current system tick using HAL_GetTick().
-uint32_t current_time = HAL_GetTick();
+    // TODO: Get the current system tick using HAL_GetTick().
+    uint32_t current_time = HAL_GetTick();
+    GPIO_PinState state = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0);
 
-// TODO: Check the time elapsed since the last valid press.
-uint32_t time_elapsed = current_time - last_button_press_time;
-GPIO_PinState state = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0);
-// Compare the elapsed time against DEBOUNCE_MS.
-// TODO: Read the PA0 button state. The button is active low.
-// TODO: If a valid debounced press occurs:
-// 1. Update last_button_press_time.
-// 2. Toggle speed_state between 0 and 1.
-// 3. Call change_timer_period() with 500 or 1000.
-if (time_elapsed > DEBOUNCE_MS && state == GPIO_PIN_RESET){
-  last_button_press_time = current_time;
+    // TODO: Check the time elapsed since the last valid press.
+    // Compare the elapsed time against DEBOUNCE_MS.
+    // TODO: Read the PA0 button state. The button is active low.
+    // TODO: If a valid debounced press occurs:
+    // 1. Update last_button_press_time.
+    // 2. Toggle speed_state between 0 and 1.
+    // 3. Call change_timer_period() with 500 or 1000.
+ 
+    if (state == GPIO_PIN_RESET && button_ready)
+    {
+        if ((current_time - last_button_press_time) >= DEBOUNCE_MS)
+        {
+            last_button_press_time = current_time;
 
-  if (speed_state ==1){
-    speed_state = 0;
-    change_timer_period(1000);
-  }
-  else if (speed_state == 0){
-    speed_state = 1;
-    change_timer_period(500);
-  }
+            /* Toggle speed */
+            if (speed_state == 0)
+            {
+                speed_state = 1;
+                change_timer_period(500);
+            }
+            else
+            {
+                speed_state = 0;
+                change_timer_period(1000);
+            }
 
+            /* Do not accept another press until button is released */
+            button_ready = 0;
+        }
+    }
 
-}
+    /* Button has been released */
+    if (state == GPIO_PIN_SET)
+    {
+        button_ready = 1;
+    }
 }
 /* USER CODE END 0 */
 
