@@ -51,10 +51,10 @@ void update_led_pattern(void)
     HAL_GPIO_WritePin(led_ports[current_led],led_pins[current_led],GPIO_PIN_SET);
     // 3. Update the current_led index based on direction
     if(current_led ==7){
-        direction =-1;
+        direction =- 1;
     }
     else if (current_led==0){
-        direction =1;
+        direction = 1;
     }
 
     current_led+=direction;
@@ -91,9 +91,9 @@ int main(void)
         /* USER CODE END WHILE */
 
         if(timer_event){ //If it hasn't been set yet, keep polling
-        timer_event -= 1; //Clear the flag
-        update_led_pattern();   //Update the LED pattern
-    }
+          timer_event = 0; //Clear the flag
+          update_led_pattern();   //Update the LED pattern
+        }
     }
 }
 
