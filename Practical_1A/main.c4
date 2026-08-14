@@ -40,6 +40,10 @@ volatile int8_t direction = 1;
 uint32_t last_button_time[4] = {0, 0, 0, 0};
 uint8_t speed_state = 0;        // 0 = slow (1s), 1 = fast (0.5s)
 
+/* 1 = button can generate an action
+   0 = button is waiting for release */
+uint8_t button_ready[4] = {1, 1, 1, 1};
+
 // Mode 3 state machine
 typedef enum {
     SPARKLE_IDLE = 0,
@@ -149,9 +153,14 @@ void handle_buttons(void)
     /* Implement debounce logic for PA0. Toggle the timer speed between 500ms and 1000ms. */
     if (button_state[0] == GPIO_PIN_RESET)
     {
-        if ((now - last_button_time[0]) >= DEBOUNCE_MS)
+        if (button_ready[0] && (now - last_button_time[0]) >= DEBOUNCE_MS)
         {
             last_button_time[0] = now;
+
+            /*
+               Prevents another action while button is held.
+            */
+            button_ready[0] = 0;
 
             if (speed_state == 0)
             {  
@@ -167,37 +176,95 @@ void handle_buttons(void)
             }
         }
     }
+    else
+    {
+        /*
+           Button is released. Wait for the debounce period before allowing another press.
+        */
+        if (!button_ready[0])
+        {
+            if (now - last_button_time[0] >= DEBOUNCE_MS)
+            {
+                button_ready[0] = 1;
+            }
+        }
+    }
 
     /* Implement debounce logic for PA1. Call set_mode(MODE_1). */
     if (button_state[1] == GPIO_PIN_RESET)
     {
-        if ((now - last_button_time[1]) >= DEBOUNCE_MS)
+        if (button_ready[1] && (now - last_button_time[1]) >= DEBOUNCE_MS)
         {
             last_button_time[1] = now;
 
+            *
+               Lock button until released.
+            */
+            button_ready[1] = 0;
+
             set_mode(MODE_1);
+        }
+    }
+    else
+    {
+        if (!button_ready[1])
+        {
+            if (now - last_button_time[1] >= DEBOUNCE_MS)
+            {
+                button_ready[1] = 1;
+            }
         }
     }
     
     /* Implement debounce logic for PA2. Call set_mode(MODE_2). */
     if (button_state[2] == GPIO_PIN_RESET)
     {
-        if ((now - last_button_time[2]) >= DEBOUNCE_MS)
+        if (button_ready[2] && (now - last_button_time[2]) >= DEBOUNCE_MS)
         {
             last_button_time[2] = now;
 
+            /*
+               Lock button until released.
+            */
+            button_ready[2] = 0;
+
             set_mode(MODE_2);
+        }
+    }
+    else
+    {
+        if (!button_ready[2])
+        {
+            if (now - last_button_time[2] >= DEBOUNCE_MS)
+            {
+                button_ready[2] = 1;
+            }
         }
     }
     
     /* Implement debounce logic for PA3. Call set_mode(MODE_3). */
     if (button_state[3] == GPIO_PIN_RESET)
     {
-        if ((now - last_button_time[3]) >= DEBOUNCE_MS)
+        if (button_ready[3] && (now - last_button_time[3]) >= DEBOUNCE_MS)
         {
             last_button_time[3] = now;
 
+            /*
+               Lock button until released.
+            */
+            button_ready[3] = 0;
+
             set_mode(MODE_3);
+        }
+    }
+    else
+    {
+        if (!button_ready[3])
+        {
+            if (now - last_button_time[3] >= DEBOUNCE_MS)
+            {
+                button_ready[3] = 1;
+            }
         }
     }
 }
