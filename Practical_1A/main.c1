@@ -113,6 +113,7 @@ static void MX_TIM16_Init(void)
   if (HAL_TIM_Base_Init(&htim16) != HAL_OK) {
     Error_Handler();
   }
+  __HAL_TIM_ENABLEIT(&htim16,TIM_FLAG_UPDATE);
   NVIC_EnableIRQ(TIM16_IRQn);
 }
 
