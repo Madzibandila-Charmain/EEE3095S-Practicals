@@ -197,7 +197,7 @@ void handle_buttons(void)
         {
             last_button_time[1] = now;
 
-            *
+            /*
                Lock button until released.
             */
             button_ready[1] = 0;
