@@ -46,6 +46,10 @@ static double timestamp_us(void)
 /* Hand check: r^2 <= x < (r+1)^2, written out in full. */
 static int hand_check(uint32_t x, uint32_t r)
 {
+    uint64_t r_squared = (uint64_t)r * r;
+    uint64_t next_squared = (uint64_t)(r + 1) * (r + 1);
+
+    return (r_squared <= x) && (x < next_squared);
 }
 
 static double time_n_calls(long reps)
