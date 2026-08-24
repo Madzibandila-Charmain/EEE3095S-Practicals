@@ -52,9 +52,29 @@ static int hand_check(uint32_t x, uint32_t r)
     return (r_squared <= x) && (x < next_squared);
 }
 
+/*Times all calls and returns average time per call in ns */
 static double time_n_calls(long reps)
 {
+    volatile uint32_t result = 0; //Volatile to protect the variable from the CPU
 
+    uint32_t x = 987654321u;
+
+    double start = timestamp_us();   //Stores the time at the start of the call
+
+    for (long i = 0; i < reps; i++) {
+        result = golden_isqrt(x);
+    }
+
+    double end = timestamp_us();     //Stores the time after reps calls.
+
+    //Prevents the compiler from treating the result as unused(2^32 - 1)
+    if (result == 0xFFFFFFFFu) {
+        print("Unexpected result\n");
+    }
+
+    double elapsed_us = end - start;
+
+    return (elapsed_us * 1000.0) / (double)reps;
 }
 
 int main(void)
