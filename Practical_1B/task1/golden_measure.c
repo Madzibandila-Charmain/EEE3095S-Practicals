@@ -32,8 +32,14 @@ static uint32_t golden_isqrt(uint32_t x)
     return (uint32_t)floor(sqrt((double)x));
 }
 
+/* Returns current time in microseconds */
 static double timestamp_us(void)
 {
+    struct timespec ts;
+
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+
+    return (double)ts.tv_sec * 1000000.0 + (double)ts.tv_nsec / 1000.0;
 
 }
 
