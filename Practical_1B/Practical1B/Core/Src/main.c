@@ -4,9 +4,9 @@
   * EEE3096S 2026 - Practical 1B
   * Tasks 2 and 3: fast integer square root, TIM16 timing, optimisation flags
   *
-  * Student 1 : <name>  <student number>
-  * Student 2 : <name>  <student number>
-  * Date      : <date>
+  * Student 1 : <Charmain Madzibandila>  <MDZMUT005>
+  * Student 2 : <Mosa Mdladla>  <MNYMOS010>
+  * Date      : <24 August 2026>
   *
   * Board pins used
   *   PC13 : scope pulse. Driven LOW for the timed section, HIGH otherwise.
@@ -51,8 +51,8 @@ static const uint32_t golden_inputs[10] = {
  * the practical sheet. The firmware self-test below compares against these.
  */
 static const uint32_t golden_outputs[10] = {
-    0u, 0u, 0u, 0u, 0u, 0u,
-    0u, 0u, 0u, 0u
+    0u, 1u, 3u, 4u, 63u, 255u,
+    11111u, 31426u, 65535u, 65535u
 };
 
 /*
