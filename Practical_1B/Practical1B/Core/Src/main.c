@@ -87,6 +87,7 @@ static uint32_t time_n_calls(uint32_t x, uint32_t n);
  * ------------------------------------------------------------------------ */
 static void gpio_init(void)
 {
+
     /*
      * TODO 2
      * Enable the peripheral clock for GPIOC and GPIOB.
@@ -96,6 +97,8 @@ static void gpio_init(void)
      *
      * RCC->???ENR |= ... ;
      */
+    RCC->AHBENR |= RCC_AHBENR_GPIOBEN;
+    RCC->AHBENR |= RCC_AHBENR_GPIOCEN;
 
     /*
      * TODO 3
@@ -104,12 +107,20 @@ static void gpio_init(void)
      * output pattern. Leave every other pin untouched.
      */
 
+    GPIOC->MODER &= ~(3UL << (PULSE_PIN * 2));
+    GPIOC->MODER |=  (1UL << (PULSE_PIN * 2));
+
+    GPIOB->MODER &= ~(3UL << (LED_PIN * 2));
+    GPIOB->MODER |=  (1UL << (LED_PIN * 2));
+
     /*
      * TODO 4
      * Set the idle states: PC13 HIGH (pulse is active low) and PB1 LOW
      * (LED off until the self-test passes).
      * BSRR sets a pin. BRR clears a pin.
      */
+    GPIOC->BSRR = (1UL << PULSE_PIN);
+    GPIOB->BRR = (1UL << LED_PIN);
 }
 
 static void timing_timer_init(void)
@@ -119,6 +130,7 @@ static void timing_timer_init(void)
      * Enable the TIM16 peripheral clock. TIM16 and the GPIO ports sit on
      * different buses on this device. Name both buses in your report.
      */
+    RCC->APB2ENR |= RCC_APB2ENR_TIM16EN;
 
     /*
      * TODO 6
@@ -133,12 +145,21 @@ static void timing_timer_init(void)
      *
      * TIM16->PSC = ??? ;
      */
+    TIM16->PSC = 0;
 
     /*
      * TODO 7
      * Set ARR for a free running 16-bit counter, force the prescaler to
      * load with an update event, then enable the counter.
      */
+
+    TIM16->ARR = 0xFFFF;
+
+    TIM16->EGR = TIM_EGR_UG;
+
+    TIM16->CNT = 0;
+
+    TIM16->CR1 |= TIM_CR1_CEN;
 }
 
 /* ---------------------------------------------------------------------------
@@ -158,9 +179,9 @@ static void timing_timer_init(void)
 static inline uint32_t square_le(uint32_t mid, uint32_t x)
 {
     /* TODO 8: return the comparison result. */
-    (void)mid;
-    (void)x;
-    return 0u;
+    uint64_t square = (uint64_t)mid * mid;
+
+    return square <= x;
 }
 
 /*
@@ -175,8 +196,24 @@ static uint32_t isqrt(uint32_t x)
      * answer range works well and is simple to reason about.
      *
      */
-    (void)x;
-    return 0u;
+    uint32_t low = 0u;
+    uint32_t high = 65535u;
+
+    while (low <= high)
+    {
+        uint32_t mid = low + ((high - low) >> 1);
+
+        if (square_le(mid, x))
+        {
+            low = mid + 1u;
+        }
+        else
+        {
+            high = mid - 1u;
+        }
+    }
+
+    return high;
 }
 
 /* ---------------------------------------------------------------------------
@@ -197,10 +234,13 @@ static uint32_t time_one_call(uint32_t x)
     GPIOC->BRR = (1UL << PULSE_PIN);   /* PC13 low: pulse starts */
 
     /* TODO 10: capture the counter into a. Which register holds the count? */
+    a = TIM16->CNT;
 
     sink = isqrt(x);                   /* the code under test */
 
     /* TODO 11: capture the counter into b. */
+
+    b = TIM16->CNT;
 
     GPIOC->BSRR = (1UL << PULSE_PIN);  /* PC13 high: pulse ends */
 
@@ -211,9 +251,14 @@ static uint32_t time_one_call(uint32_t x)
      * Work out an expression correct across a wrap and explain it in your
      * report. Test your reasoning on a = 65500, b = 20.
      */
-    (void)a;
-    (void)b;
-    return 0u;
+    if (b >= a)
+    {
+        return (uint32_t)(b - a);
+    }
+    else
+    {
+        return (uint32_t)(65536u - a + b);
+    }
 }
 
 /*
@@ -224,14 +269,30 @@ static uint32_t time_n_calls(uint32_t x, uint32_t n)
 {
     uint16_t a = 0u;
     uint16_t b = 0u;
+    uint32_t total = 0u;
 
     GPIOC->BRR = (1UL << PULSE_PIN);
 
     /* TODO 13: capture the counter into a. */
+    a = TIM16->CNT;
 
     for (uint32_t i = 0u; i < n; i++)
     {
         sink = isqrt(x);
+
+        b = TIM16->CNT;
+
+        if (b >= a)
+        {
+            total += (uint32_t)(b - a);
+        }
+        else
+        {
+            total += (uint32_t)(65536u - a + b);
+        }
+
+        a = b;
+
     }
 
     /* TODO 14: capture the counter into b. */
@@ -247,9 +308,7 @@ static uint32_t time_n_calls(uint32_t x, uint32_t n)
      * the total run stays inside a single unambiguous window, or track the
      * overflows yourself. State your choice in the report.
      */
-    (void)a;
-    (void)b;
-    return 0u;
+    return total;
 }
 
 /* USER CODE END 0 */
@@ -284,6 +343,13 @@ int main(void)
    * The demonstrator checks this LED before anything else.
    */
 
+  if (pass_all) {
+      GPIOB->BSRR = (1UL << LED_PIN);
+  }
+  else {
+      GPIOB->BRR = (1UL << LED_PIN);
+  }
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -304,7 +370,7 @@ int main(void)
      * scope trigger jump.
      */
     /* long_run_span    = time_n_calls(TEST_INPUT, LONG_RUN_N); */
-    /* mean_us_per_call = ??? ; */
+    /* mean_us_per_call = ((float)long_run_span * 0.125f) / (float)LONG_RUN_N; */
 
     /* Gap between measurements so the scope has a clean single pulse */
     for (volatile int d = 0; d < 100000; d++)
