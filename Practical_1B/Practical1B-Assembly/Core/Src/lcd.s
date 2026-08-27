@@ -39,11 +39,12 @@ LCD_Run:
     PUSH {LR}
 
     @ TODO 1: Wait for the LCD power rail to settle (consult datasheet).
-    
+    BL LCD_DelayLong
     @ TODO 2: Call the 4-bit initialization sequence.
-    
+    BL LCD_Init
     @ TODO 3: Write the character 'A' (0x41) to the display.
-
+    MOVS R0, #0x41
+    BL LCD_WriteData
 hang:
     B    hang
 
