@@ -145,7 +145,7 @@ static void timing_timer_init(void)
      *
      * TIM16->PSC = ??? ;
      */
-    TIM16->PSC = 0;
+    TIM16->PSC = 7u;
 
     /*
      * TODO 7
@@ -157,7 +157,7 @@ static void timing_timer_init(void)
 
     TIM16->EGR = TIM_EGR_UG;
 
-    TIM16->CNT = 0;
+    TIM16->CNT = 0u;
 
     TIM16->CR1 |= TIM_CR1_CEN;
 }
@@ -179,9 +179,11 @@ static void timing_timer_init(void)
 static inline uint32_t square_le(uint32_t mid, uint32_t x)
 {
     /* TODO 8: return the comparison result. */
-    uint64_t square = (uint64_t)mid * mid;
+	uint64_t square;
 
-    return square <= x;
+	square = (uint64_t)mid * (uint64_t)mid;
+
+	return (square <= x);
 }
 
 /*
@@ -228,21 +230,23 @@ static uint32_t isqrt(uint32_t x)
  */
 static uint32_t time_one_call(uint32_t x)
 {
-    uint16_t a = 0u;
-    uint16_t b = 0u;
+    uint16_t a;
+    uint16_t b;
 
     GPIOC->BRR = (1UL << PULSE_PIN);   /* PC13 low: pulse starts */
 
     /* TODO 10: capture the counter into a. Which register holds the count? */
-    a = TIM16->CNT;
+    a = (uint16_t)TIM16->CNT;
+
+    GPIOC->BRR = (1UL << PULSE_PIN);   /* PC13 low: pulse starts */
 
     sink = isqrt(x);                   /* the code under test */
 
     /* TODO 11: capture the counter into b. */
 
-    b = TIM16->CNT;
-
     GPIOC->BSRR = (1UL << PULSE_PIN);  /* PC13 high: pulse ends */
+
+    b = (uint16_t)TIM16->CNT;
 
     /*
      * TODO 12
@@ -251,14 +255,9 @@ static uint32_t time_one_call(uint32_t x)
      * Work out an expression correct across a wrap and explain it in your
      * report. Test your reasoning on a = 65500, b = 20.
      */
-    if (b >= a)
-    {
-        return (uint32_t)(b - a);
-    }
-    else
-    {
-        return (uint32_t)(65536u - a + b);
-    }
+
+     return (uint32_t)(uint16_t)(b - a);
+
 }
 
 /*
@@ -267,36 +266,42 @@ static uint32_t time_one_call(uint32_t x)
  */
 static uint32_t time_n_calls(uint32_t x, uint32_t n)
 {
-    uint16_t a = 0u;
-    uint16_t b = 0u;
+    uint16_t a;
+    uint16_t b;
+
     uint32_t total = 0u;
 
     GPIOC->BRR = (1UL << PULSE_PIN);
 
     /* TODO 13: capture the counter into a. */
-    a = TIM16->CNT;
+    a = (uint16_t)TIM16->CNT;
 
     for (uint32_t i = 0u; i < n; i++)
     {
-        sink = isqrt(x);
 
-        b = TIM16->CNT;
+        sink = isqrt(x);
+        b = (uint16_t)TIM16->CNT;
 
         if (b >= a)
         {
             total += (uint32_t)(b - a);
         }
+        /*
+         * Counter wrapped between a and b.
+         */
         else
         {
             total += (uint32_t)(65536u - a + b);
         }
 
+        /*
+         * Start the next interval from b.
+         */
         a = b;
-
     }
 
     /* TODO 14: capture the counter into b. */
-
+    b = (uint16_t)TIM16->CNT;
     GPIOC->BSRR = (1UL << PULSE_PIN);
 
     /*
@@ -369,8 +374,8 @@ int main(void)
      * call pulse. Two pulses of very different widths on one pin make the
      * scope trigger jump.
      */
-    /* long_run_span    = time_n_calls(TEST_INPUT, LONG_RUN_N); */
-    /* mean_us_per_call = ((float)long_run_span * 0.125f) / (float)LONG_RUN_N; */
+    long_run_span    = time_n_calls(TEST_INPUT, LONG_RUN_N);
+    mean_us_per_call = (float)long_run_span / (float)LONG_RUN_N;
 
     /* Gap between measurements so the scope has a clean single pulse */
     for (volatile int d = 0; d < 100000; d++)
