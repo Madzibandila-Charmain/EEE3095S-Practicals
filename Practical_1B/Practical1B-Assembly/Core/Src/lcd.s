@@ -93,17 +93,29 @@ LCD_Init:
 LCD_WriteCmd:
     PUSH {R0, LR}
     @ TODO 5: Drive RS (PC14) LOW, then fall through to the shared sender.
-
+    LDR R1, =GPIOC_BSRR
+    LDR R2, =(0x01<<30)
+    STR R2, [R1]
+    
     .type LCD_WriteData, %function
 LCD_WriteData:
     PUSH {R0, LR}
     @ TODO 6: Drive RS (PC14) HIGH, then fall through.
-
+    LDR R1, =GPIOC_BSRR
+    LDR R2, =(0x01<<14)
+    STR R2, [R1]
+    
 LCD_Send8:
     @ TODO 7: Send the upper nibble of R0, pulse Enable,
     @         then the lower nibble of R0, pulse Enable again.
 
+    LSR R0, R0, #4  
+    BL LCD_SendNibble
+    BL LCD_Pulse
+
+
     POP {R0, PC}
+   
 
 @ ===========================================================================
 @ LCD_SendNibble   R0 bits 3:0 -> the four data lines
@@ -118,8 +130,8 @@ LCD_SendNibble:
     @   R0 bit 2 -> PA12  (D6)
     @   R0 bit 3 -> PA15  (D7)
 
+    MOVS 
     POP {R1, R2, R3, PC}
-
 @ ===========================================================================
 @ LCD_Pulse
 @ ===========================================================================
