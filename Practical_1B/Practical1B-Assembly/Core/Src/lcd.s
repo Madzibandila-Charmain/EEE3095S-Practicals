@@ -62,7 +62,27 @@ LCD_Init:
     @ Reference the HD44780 datasheet flowchart. 
     @ Send commands with RS low using LCD_WriteCmd.
 
+    MOVS R0, 0011
+    BL LCD_SendNibble
+    BL LCD_Pulse
+    BL LCD_DelayLong
+
+    MOVS R0, 0011
+    BL LCD_SendNibble
+    BL LCD_Pulse
+    BL LCD_DelayShort
+
+    MOVS R0, 0011
+    BL LCD_SendNibble
+    BL LCD_Pulse
+    
+
+    MOVS R0, 0010
+    BL LCD_SendNibble
+    BL LCD_Pulse
+
     POP {PC}
+
 
 @ ===========================================================================
 @ LCD_WriteCmd   R0 = command byte, RS low
