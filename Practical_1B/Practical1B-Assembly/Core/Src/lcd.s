@@ -116,7 +116,6 @@ LCD_Send8:
 
     POP {R0, PC}
    
-
 @ ===========================================================================
 @ LCD_SendNibble   R0 bits 3:0 -> the four data lines
 @ ===========================================================================
@@ -124,14 +123,60 @@ LCD_Send8:
 LCD_SendNibble:
     PUSH {R1, R2, R3, LR}
 
-    @ TODO 8: Map the four bits of R0 onto the four data pins (across 3 ports).
-    @   R0 bit 0 -> PB8   (D4)
-    @   R0 bit 1 -> PB9   (D5)
-    @   R0 bit 2 -> PA12  (D6)
-    @   R0 bit 3 -> PA15  (D7)
+    @ --- D4 (bit0) -> PB8 ---
+    LDR  R1, =GPIOB_BSRR        @loading address of Bit Set/Reset Register
+    LSLS R2, R0, #31            @Shifting value of R0 by 31 to determine if it is a 1 or a 0
+    BPL  IF_PB8_LOW             @if the value is high, continues in this branch, if not, moves to the IF_PB8_LOW branch and resets PB8 as low (bit 24)
+    MOVS R3, #1
+    LSLS R3, R3, #8
+    STR  R3, [R1]
+    B    PB8_CONTINUE
+IF_PB8_LOW:
+    MOVS R3, #1
+    LSLS R3, R3, #(8+16)
+    STR  R3, [R1]
+PB8_CONTINUE:
+    @ --- D5 (bit1) -> PB9 ---
+    LSLS R2, R0, #30
+    BPL  IF_PB9_LOW
+    MOVS R3, #1
+    LSLS R3, R3, #9
+    STR  R3, [R1]
+    B    PB9_CONTINUE
+IF_PB9_LOW:
+    MOVS R3, #1
+    LSLS R3, R3, #(9+16)
+    STR  R3, [R1]
 
-    MOVS 
-    POP {R1, R2, R3, PC}
+PB9_CONTINUE:
+    @ --- D6 (bit2) -> PA12 ---
+    LDR  R1, =GPIOA_BSRR
+    LSLS R2, R0, #29
+    BPL  IF_PA12_LOW
+    MOVS R3, #1
+    LSLS R3, R3, #12
+    STR  R3, [R1]
+    B    PA12_CONTINUE
+IF_PA12_LOW:
+    MOVS R3, #1
+    LSLS R3, R3, #(12+16)
+    STR  R3, [R1]
+
+PA12_CONTINUE:
+    @ --- D7 (bit3) -> PA15 ---
+    LSLS R2, R0, #28
+    BPL  IF_PA15_LOW
+    MOVS R3, #1
+    LSLS R3, R3, #15
+    STR  R3, [R1]
+    B    PA15_CONTINUE
+IF_PA15_LOW:
+    MOVS R3, #1
+    LSLS R3, R3, #(15+16)
+    STR  R3, [R1]
+
+PA15_CONTINUE:
+    POP  {R1, R2, R3, PC}
 
 @ ===========================================================================
 @ LCD_Pulse
@@ -143,17 +188,29 @@ LCD_Pulse:
     LDR  R0, =GPIOC_BSRR
 
     @ TODO 9: Set PC15 HIGH.
+    MOVS R1, #1
+    LSLS R1, R1, #15
+    STR R1, [R0]
 
     @ -----------------------------------------------------------------
     @ TODO 10: THE TIMING FIX
-    @ Implement a calculated pad delay here to overcome the RC time 
+    @ Implement a calculated pad delay here to overcome the RC time
     @ constant of the level shifter and meet the HD44780 hold time requirements.
     @ Show your cycle arithmetic in the comments.
     @ -----------------------------------------------------------------
 
+    @NOP
+    @NOP
+    @NOP
+
     @ TODO 11: Set PC15 LOW.
+    MOVS R1, #1
+    LSLS R1, R1, #(15+16)
+    STR R1, [R0]
 
     @ TODO 12: Hold Enable low long enough to meet the LCD cycle time.
+    MOVS R0, #2
+    BL LCD_DelayShort
 
     POP {R0, R1, R2, PC}
 
