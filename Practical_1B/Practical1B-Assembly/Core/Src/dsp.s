@@ -4,7 +4,7 @@
  * Cycle-counted ADC to DAC loop with a 45 degree phase delay
  *
  * Student 1 : Mosa Mdladla MNYMOS010
- * Student 2 : <name>  <student number>
+ * Student 2 : Charmain Madzibandila MDZMUT005
  */
 
     .syntax unified
@@ -45,15 +45,19 @@ loop:
     @         Load your inner loop counter and insert any NOP padding 
     @         needed to hit your exact target.
 
-    LDR R4, =330       @N = 250         @Total cycles: 2+2+2cycles = 6 cycles
-
+    MOVS R4, #248       @N = 250
+	NOP					@1 cycles
+	NOP					@1 cycles	@Total cycles: 2+2+2+2cycles = 8 cycles
 delay_loop:
     @ --- INNER LOOP -------------------------------------------------------
     @ TODO 4: Implement the counted delay loop.
     @         (Remember to use flag-updating arithmetic so your branch works).
+
     SUBS R4, R4, #1  @ 1 cycle
-    BNE delay_loop  @  2 cycles
-                    @ total cycles  = 990 cycles
+    BNE delay_loop  @  3 cycles if taken, 1 if not taken
+                    @ total cycles  = 992 cycles + 8 cycles
+
+
 
     @ --- REPEAT -----------------------------------------------------------
     @ TODO 5: Branch back to the start of the main 'loop'.
