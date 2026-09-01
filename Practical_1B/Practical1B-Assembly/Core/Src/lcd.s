@@ -3,8 +3,8 @@
  * EEE3096S 2026 - Practical 1B, Task 5
  * 4-bit bit-banged HD44780 driver, and the level shifter timing fault
  *
- * Student 1 : <name>  <student number>
- * Student 2 : <name>  <student number>
+ * Student 1 : Mosa Mdladla MNYMOS010
+ * Student 2 : Charmain Madzibandila MDZMUT005
  */
 
     .syntax unified
@@ -39,22 +39,15 @@ LCD_Run:
     PUSH {LR}
 
     @ TODO 1: Wait for the LCD power rail to settle (consult datasheet).
-    LDR R0,=50
+    LDR R0,=40
     BL LCD_DelayLong
     @ TODO 2: Call the 4-bit initialization sequence.
     BL LCD_Init
     @ TODO 3: Write the character 'A' (0x41) to the display.
-    MOVS R0, #0x41
+    LDR R0, =0x41
     BL LCD_WriteData
 hang:
    B    hang
-
-@debug_loop:
-@	LDR R0, =0b01000001
-@	BL LCD_WriteData
-@	LDR R0, =100
-@	BL LCD_DelayLong
-@	B debug_loop
 
     .size LCD_Run, .-LCD_Run
 
@@ -82,43 +75,46 @@ LCD_Init:
     LDR R0, =150
     BL LCD_DelayShort
 
+
     MOVS R0, #0b0011
-    BL LCD_SendNibble
-    BL LCD_Pulse
-    LDR R0, =150
-    BL LCD_Pulse
+    BL   LCD_SendNibble
+    BL   LCD_Pulse
+    LDR  R0, =150            @ wait > 37 us
+    BL   LCD_DelayShort
 
     MOVS R0, #0b0010
-    BL LCD_SendNibble
-    BL LCD_Pulse
+    BL   LCD_SendNibble
+    BL   LCD_Pulse
+    LDR  R0, =150
+    BL   LCD_DelayShort
 
-    LDR R0, =0b00101000
-    BL LCD_WriteCmd
-    LDR R0, =150
-    BL LCD_DelayShort
+    @ --- Function set
+    LDR  R0, =0b00101000
+    BL   LCD_WriteCmd
+    LDR  R0, =150
+    BL   LCD_DelayShort
 
-    LDR R0, =0b00001000
-    BL LCD_WriteCmd
-    LDR R0, =150
-    BL LCD_DelayShort
+    LDR  R0, =0b00001000
+    BL   LCD_WriteCmd
+    LDR  R0, =150
+    BL   LCD_DelayShort
 
-    LDR R0, =0b00000001
-    BL LCD_WriteCmd
-    LDR R0, =2
-    BL LCD_DelayLong
+    LDR  R0, =0b00000001
+    BL   LCD_WriteCmd
+    LDR  R0, =2              @ wait > 1.52 ms
+    BL   LCD_DelayLong
 
-    LDR R0, =0b00001110
-    BL LCD_WriteCmd
-    LDR R0, =150
-    BL LCD_DelayShort
+    LDR  R0, =0b00000110
+    BL   LCD_WriteCmd
+    LDR  R0, =150
+    BL   LCD_DelayShort
 
-    LDR R0, =0b00001100
-    BL LCD_WriteCmd
-    LDR R0, =150
-    BL LCD_DelayShort
+    LDR  R0, =0b00001100
+    BL   LCD_WriteCmd
+    LDR  R0, =150
+    BL   LCD_DelayShort
 
-
-    POP {PC}
+    POP  {PC}
 
 @ ===========================================================================
 @ LCD_WriteCmd   R0 = command byte, RS low
@@ -242,7 +238,6 @@ LCD_Pulse:
     @ Show your cycle arithmetic in the comments.
     @ -----------------------------------------------------------------
 
-
     @ TODO 11: Set PC15 LOW.
     MOVS R1, #1
     LSLS R1, R1, #(15+16)
@@ -259,12 +254,12 @@ LCD_Pulse:
 @ ===========================================================================
     .type LCD_DelayLong, %function
 LCD_DelayLong:
-    @ SYSCLK = 8 MHz -> 8,000 cycles = 1 ms
-    @ loop body = SUBS(1) + BNE taken(2) = 3 cycles PER iteration
-    @ iterations per ms = 8000 / 3 = 2666.67 -> round UP to 2667
-    @ (rounding up guarantees we meet the datasheet's minimum wait times)
+    @ SYSCLK = 8 MHz = 8,000 cycles = 1 ms
+    @ loop = SUBS(1 cycle) + BNE taken(2 cycles) = 3 cycles PER iteration
+    @ iterations per ms = 8000 / 3 = 2666.67 = 2667
     PUSH {R1, LR}
     LDR  R1, =2667
+    //SUBS R1, R1, #1
     MULS R1, R1, R0
 long_inner_loop:
     SUBS R1, R1, #1
@@ -276,8 +271,6 @@ LCD_DelayShort:
     @ R0 = number of microseconds to wait.
     @ SYSCLK = 8 MHz -> 8 cycles = 1 us
     @ loop body = 3 cycles/iteration -> iterations per us = 8/3 = 2.67
-    @ -> round UP to 3 (coarse resolution at this clock speed, but every
-    @    caller already asks for a generous multiple, not a bare 1 us)
     PUSH {R1, LR}
     LDR  R1, =3
     MULS R1, R1, R0
