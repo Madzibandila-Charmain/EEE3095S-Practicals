@@ -47,9 +47,8 @@ static volatile uint32_t * const pGPIOC_BSRR =
 static volatile uint32_t * const pGPIOC_BRR =
         (volatile uint32_t *)(GPIO_BASE_ADDR + GPIO_BRR_OFFSET);
 
-	*pRCC_AHBENR &= ~(1UL << 10)
 
-/* TODO 1.4  Once TODO 1.1 and 1.2 are done, UNCOMMENT these checks. They
+ * TODO 1.4  Once TODO 1.1 and 1.2 are done, UNCOMMENT these checks. They
  *           compare your addresses with the CMSIS device header, so a wrong
  *           base or offset fails the build and names the culprit. Fix your
  *           address - do not edit the right-hand side.
@@ -68,7 +67,7 @@ _Static_assert(GPIOC_BASE_ADDR + GPIO_BSRR_OFFSET
                == (uint32_t)(uintptr_t)&GPIOC->BSRR,  "BSRR offset");
 _Static_assert(GPIOC_BASE_ADDR + GPIO_BRR_OFFSET
                == (uint32_t)(uintptr_t)&GPIOC->BRR,   "BRR offset");
-*/
+
 
 volatile uint32_t task1_half_period_ms = 5u;
 volatile uint32_t task1_toggle_count   = 0u;
@@ -81,12 +80,20 @@ void task1_gpio_init(void)
      *           bit. Use a read-modify-write so clocks other code has already
      *           enabled are kept. Be ready to explain what the board does if
      *           you forget this. */
+	
+	//Setting the clock for pc13 configuration
+	*pRCC_AHBENR |= (1UL << 19);
+	
 
     /* TODO 1.6  Put PC13 into general purpose output mode. MODER has two bits
      *           per pin: clear both of PC13's bits, then set the output value,
      *           leaving every other pin unchanged. */
 
+	*pGPIOC_MODER &= ~(0x03UL << 26);				//Clearing two bits designated for PC13
+	*pGPIOC_MODER |= (0x01UL << 26);				//Setting peripheral to output mode
+	
     /* TODO 1.7  Drive PC13 to a known starting level. */
+	*pGPIOC_BRR = 0x01UL << 13;
 }
 
 void task1_gpio_update(uint32_t now)
