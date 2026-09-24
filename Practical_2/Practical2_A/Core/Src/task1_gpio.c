@@ -36,25 +36,25 @@ static volatile uint32_t * const pRCC_AHBENR =
         (volatile uint32_t *)(RCC_BASE_ADDR + RCC_AHBENR_OFFSET);
 
 static volatile uint32_t * const pGPIOC_MODER =
-        (volatile uint32_t *)(GPIO_BASE_ADDR + GPIO_MODER_OFFSET);
+        (volatile uint32_t *)(GPIOC_BASE_ADDR + GPIO_MODER_OFFSET);
 
 static volatile uint32_t * const pGPIOC_ODR =
-        (volatile uint32_t *)(GPIO_BASE_ADDR + GPIO_ODR_OFFSET);
+        (volatile uint32_t *)(GPIOC_BASE_ADDR + GPIO_ODR_OFFSET);
 
 static volatile uint32_t * const pGPIOC_BSRR =
-        (volatile uint32_t *)(GPIO_BASE_ADDR + GPIO_BSRR_OFFSET);
+        (volatile uint32_t *)(GPIOC_BASE_ADDR + GPIO_BSRR_OFFSET);
 
 static volatile uint32_t * const pGPIOC_BRR =
-        (volatile uint32_t *)(GPIO_BASE_ADDR + GPIO_BRR_OFFSET);
+        (volatile uint32_t *)(GPIOC_BASE_ADDR + GPIO_BRR_OFFSET);
 
 
- * TODO 1.4  Once TODO 1.1 and 1.2 are done, UNCOMMENT these checks. They
+ /* TODO 1.4  Once TODO 1.1 and 1.2 are done, UNCOMMENT these checks. They
  *           compare your addresses with the CMSIS device header, so a wrong
  *           base or offset fails the build and names the culprit. Fix your
  *           address - do not edit the right-hand side.
  *           (They are commented out only so the project builds before you
  *           start, letting you check your toolchain first.)
- *
+ */
 _Static_assert(RCC_BASE_ADDR   == RCC_BASE,   "RCC base mismatch");
 _Static_assert(GPIOC_BASE_ADDR == GPIOC_BASE, "GPIOC base mismatch");
 _Static_assert(RCC_BASE_ADDR + RCC_AHBENR_OFFSET
