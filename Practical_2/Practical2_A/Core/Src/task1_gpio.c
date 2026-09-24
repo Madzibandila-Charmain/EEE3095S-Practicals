@@ -16,16 +16,17 @@
 #include "prac2a.h"
 
 /* TODO 1.1  Peripheral base addresses: the memory map in RM0091 section 2. */
-#define RCC_BASE_ADDR       0x00000000UL    /* <- TODO */
-#define GPIOC_BASE_ADDR     0x00000000UL    /* <- TODO */
+#define RCC_BASE_ADDR       0x40021000UL    /* <- TODO */
+
+#define GPIOC_BASE_ADDR     0x48000800UL    /* <- TODO */
 
 /* TODO 1.2  Register offsets: the register map at the end of the RCC chapter
  *           and of the GPIO chapter of RM0091. */
-#define RCC_AHBENR_OFFSET   0x00UL          /* <- TODO */
+#define RCC_AHBENR_OFFSET   0x14UL          /* <- TODO */
 #define GPIO_MODER_OFFSET   0x00UL          /* <- TODO */
-#define GPIO_ODR_OFFSET     0x00UL          /* <- TODO */
-#define GPIO_BSRR_OFFSET    0x00UL          /* <- TODO */
-#define GPIO_BRR_OFFSET     0x00UL          /* <- TODO */
+#define GPIO_ODR_OFFSET     0x14UL          /* <- TODO */
+#define GPIO_BSRR_OFFSET    0x18UL          /* <- TODO */
+#define GPIO_BRR_OFFSET     0x28UL          /* <- TODO */
 
 /* One pointer is declared for you to show the pattern. Be ready to explain
  * what `volatile` does here, and what can go wrong without it.
