@@ -35,6 +35,20 @@
 static volatile uint32_t * const pRCC_AHBENR =
         (volatile uint32_t *)(RCC_BASE_ADDR + RCC_AHBENR_OFFSET);
 
+static volatile uint32_t * const pGPIOC_MODER =
+        (volatile uint32_t *)(GPIO_BASE_ADDR + GPIO_MODER_OFFSET);
+
+static volatile uint32_t * const pGPIOC_ODR =
+        (volatile uint32_t *)(GPIO_BASE_ADDR + GPIO_ODR_OFFSET);
+
+static volatile uint32_t * const pGPIOC_BSRR =
+        (volatile uint32_t *)(GPIO_BASE_ADDR + GPIO_BSRR_OFFSET);
+
+static volatile uint32_t * const pGPIOC_BRR =
+        (volatile uint32_t *)(GPIO_BASE_ADDR + GPIO_BRR_OFFSET);
+
+	*pRCC_AHBENR &= ~(1UL << 10)
+
 /* TODO 1.4  Once TODO 1.1 and 1.2 are done, UNCOMMENT these checks. They
  *           compare your addresses with the CMSIS device header, so a wrong
  *           base or offset fails the build and names the culprit. Fix your
