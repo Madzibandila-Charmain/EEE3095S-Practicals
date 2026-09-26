@@ -34,7 +34,7 @@ void eeprom_spi_init(void)
     /* TODO 2.5  Chip select: make EE_PIN_CS a general purpose output driven
      *           HIGH. Think about the ORDER of those two steps. Be ready to
      *           explain why CS must start high. */
-     
+
     /* RM0091: GPIOx_MODER, PB12 = general-purpose output (01) */
     EE_SPI_GPIO->MODER &= ~MODER2_MASK(EE_PIN_CS);
     EE_SPI_GPIO->MODER |= MODER2(EE_PIN_CS, 1U);
@@ -45,6 +45,31 @@ void eeprom_spi_init(void)
     /* TODO 2.6  SCK, MISO and MOSI: put them in alternate-function mode
      *           (MODER), and select the alternate function number EE_SPI_AF
      *           (the AF register for pins 8..15). Both registers are needed. */
+
+    /* RM0091: GPIOx_MODER
+     * PB13, PB14 and PB15 = Alternate Function mode (10)
+     */
+    EE_SPI_GPIO->MODER &= ~MODER2_MASK(EE_PIN_SCK);
+    EE_SPI_GPIO->MODER |= MODER2(EE_PIN_SCK, 2U);
+
+    EE_SPI_GPIO->MODER &= ~MODER2_MASK(EE_PIN_MISO);
+    EE_SPI_GPIO->MODER |= MODER2(EE_PIN_MISO, 2U);
+
+    EE_SPI_GPIO->MODER &= ~MODER2_MASK(EE_PIN_MOSI);
+    EE_SPI_GPIO->MODER |= MODER2(EE_PIN_MOSI, 2U);
+
+    /* RM0091: GPIOx_AFRH (Lookup Reference)
+     * PB13, PB14 and PB15 use AFRH because they are pins 8-15.
+     * Datasheet Table 15: AF0 selects SPI2.
+     */
+    EE_SPI_GPIO->AFR[1] &= ~AFRH4_MASK(EE_PIN_SCK);
+    EE_SPI_GPIO->AFR[1] |= AFRH4(EE_PIN_SCK, EE_SPI_AF);
+
+    EE_SPI_GPIO->AFR[1] &= ~AFRH4_MASK(EE_PIN_MISO);
+    EE_SPI_GPIO->AFR[1] |= AFRH4(EE_PIN_MISO, EE_SPI_AF);
+
+    EE_SPI_GPIO->AFR[1] &= ~AFRH4_MASK(EE_PIN_MOSI);
+    EE_SPI_GPIO->AFR[1] |= AFRH4(EE_PIN_MOSI, EE_SPI_AF);
 
     /* TODO 2.7  Recommended: high output speed on SCK and MOSI, and a pull-up
      *           on MISO. In your report, explain what the EEPROM does with its
