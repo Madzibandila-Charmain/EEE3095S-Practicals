@@ -140,6 +140,11 @@ void eeprom_spi_init(void)
 
     /* TODO 2.10  Enable the peripheral. */
 
+    /* RM0091: SPI_CR1.SPE
+     * Enable the SPI peripheral.
+     */
+    EE_SPI->CR1 |= SPI_CR1_SPE;
+
     dbg_gpiob_moder      = EE_SPI_GPIO->MODER;
     dbg_gpiob_afrh       = EE_SPI_GPIO->AFR[1];
     dbg_spi_cr1          = EE_SPI->CR1;
