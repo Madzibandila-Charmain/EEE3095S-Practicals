@@ -49,8 +49,8 @@
  *           alternate-function NUMBER connects it to them? Use the STM32F051
  *           datasheet's alternate-function table for port B, and name that
  *           table in your report. */
-#define EE_SPI                  ((SPI_TypeDef *)0x00000000UL) /* <- TODO    */
-#define EE_SPI_AF               0xFFu       /* <- TODO                      */
+#define EE_SPI                  SPI2 /* <- TODO    */
+#define EE_SPI_AF               0u       /* <- TODO                      */
 
 /* ==========================================================================
  * 3. SPI BAUD RATE
