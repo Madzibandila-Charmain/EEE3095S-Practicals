@@ -33,7 +33,7 @@
  *           Read SystemClock_Config() in main.c, then follow the clock tree in
  *           the RCC chapter of RM0091 to the bus the SPI peripheral sits on.
  *           Do not assume it. */
-#define PCLK1_HZ                0UL         /* <- TODO */
+#define PCLK1_HZ                8000000UL         /* <- TODO */
 
 /* ==========================================================================
  * 2. SPI PINS - GIVEN (see README section 5, and verify by continuity)
