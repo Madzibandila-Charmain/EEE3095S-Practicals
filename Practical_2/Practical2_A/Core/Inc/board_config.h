@@ -84,8 +84,8 @@
 /* TODO 4.2  Status register bit MASKS, from the datasheet's status register
  *           table. Which bit says a write is in progress - and is it 1 or 0
  *           while the device is busy? Which bit is the write enable latch? */
-#define EEPROM_SR_RDY           0x00u       /* <- TODO: busy bit mask       */
-#define EEPROM_SR_WEL           0x00u       /* <- TODO                      */
+#define EEPROM_SR_RDY           0x01u       /* <- TODO: busy bit mask       */
+#define EEPROM_SR_WEL           0x02u       /* <- TODO                      */
 
 /* Upper bound on waiting for a write. A hang guard only: completion must be
  * decided from the status register, never from elapsed time. */
