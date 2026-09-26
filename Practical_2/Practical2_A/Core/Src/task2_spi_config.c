@@ -25,6 +25,12 @@ void eeprom_spi_init(void)
      *           pins AND the SPI peripheral itself. They are in different RCC
      *           enable registers - find both in RM0091. */
 
+    /* RM0091: RCC_AHBENR.GPIOBEN, bit 18 */
+    RCC->AHBENR |= RCC_AHBENR_GPIOBEN;
+
+    /* RM0091: RCC_APB1ENR.SPI2EN, bit 14 */
+    RCC->APB1ENR |= RCC_APB1ENR_SPI2EN;
+
     /* TODO 2.5  Chip select: make EE_PIN_CS a general purpose output driven
      *           HIGH. Think about the ORDER of those two steps. Be ready to
      *           explain why CS must start high. */
