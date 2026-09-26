@@ -113,6 +113,26 @@ void eeprom_spi_init(void)
      *           peripheral believes its NSS input is low it will leave master
      *           mode on its own, and you will see no clock at all. */
 
+    /* RM0091: SPI_CR1
+     * Master mode, software NSS management, /32 baud rate,
+     * CPOL = 0, CPHA = 0, MSB first.
+     */
+
+    /* Clear fields that must remain at their required values. */
+    EE_SPI->CR1 &= ~(SPI_CR1_CPOL | SPI_CR1_CPHA | SPI_CR1_LSBFIRST | SPI_CR1_BR);
+
+    /* Master mode */
+    EE_SPI->CR1 |= SPI_CR1_MSTR;
+
+    /* Baud-rate divider: BR = 100 -> PCLK1 / 32 */
+    EE_SPI->CR1 |= (EE_SPI_BR << SPI_CR1_BR_Pos);
+
+    /* Software slave management.
+     * SSI = 1 keeps the internal NSS signal HIGH.
+     */
+    EE_SPI->CR1 |= SPI_CR1_SSM;
+    EE_SPI->CR1 |= SPI_CR1_SSI;
+
     /* Task 5 fault case. Leave this call exactly here: after your CR1 and CR2
      * configuration, before the peripheral is enabled. It does nothing unless
      * RUN_TASK is 5. */
