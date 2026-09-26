@@ -96,6 +96,15 @@ void eeprom_spi_init(void)
      *           the reset value does not suit single-byte transfers.
      *           Configure CR2 BEFORE enabling the peripheral. */
 
+    /* RM0091: SPI_CR2
+     * DS = 0111 -> 8-bit data frame
+     * FRXTH = 1 -> RXNE set when at least 8 bits are received
+     */
+    EE_SPI->CR2 &= ~(SPI_CR2_DS | SPI_CR2_FRXTH);
+
+    EE_SPI->CR2 |= (7UL << SPI_CR2_DS_Pos);
+    EE_SPI->CR2 |= SPI_CR2_FRXTH;
+
     /* TODO 2.9  SPI_CR1: master mode, your baud-rate divider, the clock
      *           polarity and phase the EEPROM supports (EEPROM datasheet), and
      *           the bit order.
