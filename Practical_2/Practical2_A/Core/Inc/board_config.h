@@ -74,12 +74,12 @@
 
 /* TODO 4.1  Instruction opcodes, from the EEPROM datasheet's instruction set
  *           table. */
-#define EEPROM_CMD_WREN         0x00u       /* <- TODO */
-#define EEPROM_CMD_WRDI         0x00u       /* <- TODO */
-#define EEPROM_CMD_RDSR         0x00u       /* <- TODO */
-#define EEPROM_CMD_WRSR         0x00u       /* <- TODO */
-#define EEPROM_CMD_READ         0x00u       /* <- TODO */
-#define EEPROM_CMD_WRITE        0x00u       /* <- TODO */
+#define EEPROM_CMD_WREN         0x06u       /* <- TODO */
+#define EEPROM_CMD_WRDI         0x04u       /* <- TODO */
+#define EEPROM_CMD_RDSR         0x05u       /* <- TODO */
+#define EEPROM_CMD_WRSR         0x01u       /* <- TODO */
+#define EEPROM_CMD_READ         0x03u       /* <- TODO */
+#define EEPROM_CMD_WRITE        0x02u       /* <- TODO */
 
 /* TODO 4.2  Status register bit MASKS, from the datasheet's status register
  *           table. Which bit says a write is in progress - and is it 1 or 0
