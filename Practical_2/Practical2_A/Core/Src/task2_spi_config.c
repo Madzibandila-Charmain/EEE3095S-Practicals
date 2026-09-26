@@ -35,12 +35,12 @@ void eeprom_spi_init(void)
      *           HIGH. Think about the ORDER of those two steps. Be ready to
      *           explain why CS must start high. */
 
+    /* RM0091: GPIOx_BSRR, lower half sets the output HIGH */
+    EE_SPI_GPIO->BSRR = EE_CS_MASK;
+
     /* RM0091: GPIOx_MODER, PB12 = general-purpose output (01) */
     EE_SPI_GPIO->MODER &= ~MODER2_MASK(EE_PIN_CS);
     EE_SPI_GPIO->MODER |= MODER2(EE_PIN_CS, 1U);
-
-    /* RM0091: GPIOx_BSRR, lower half sets the output HIGH */
-    EE_SPI_GPIO->BSRR = EE_CS_MASK;
 
     /* TODO 2.6  SCK, MISO and MOSI: put them in alternate-function mode
      *           (MODER), and select the alternate function number EE_SPI_AF
