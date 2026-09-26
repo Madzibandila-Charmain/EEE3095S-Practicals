@@ -60,7 +60,7 @@
  *           PCLK1_HZ, using the BR field description of SPI_CR1 in RM0091.
  *           Show the arithmetic in your report. Do not tune it until the
  *           waveform "looks right". */
-#define EE_SPI_BR               0UL         /* <- TODO                      */
+#define EE_SPI_BR               4UL         /* <- TODO                      */
 #define EE_SCK_HZ_PREDICTED     (PCLK1_HZ >> (EE_SPI_BR + 1U))
 
 /* ==========================================================================
