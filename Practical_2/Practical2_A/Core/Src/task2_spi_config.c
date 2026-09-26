@@ -75,6 +75,21 @@ void eeprom_spi_init(void)
      *           on MISO. In your report, explain what the EEPROM does with its
      *           output pin while CS is high, and why a pull-up helps. */
 
+    /* RM0091: GPIOx_OSPEEDR
+     * High speed for SPI clock and MOSI.
+     */
+    EE_SPI_GPIO->OSPEEDR &= ~MODER2_MASK(EE_PIN_SCK);
+    EE_SPI_GPIO->OSPEEDR |= MODER2(EE_PIN_SCK, 3U);
+
+    EE_SPI_GPIO->OSPEEDR &= ~MODER2_MASK(EE_PIN_MOSI);
+    EE_SPI_GPIO->OSPEEDR |= MODER2(EE_PIN_MOSI, 3U);
+
+    /* RM0091: GPIOx_PUPDR
+     * Pull-up on MISO.
+     */
+    EE_SPI_GPIO->PUPDR &= ~MODER2_MASK(EE_PIN_MISO);
+    EE_SPI_GPIO->PUPDR |= MODER2(EE_PIN_MISO, 1U);
+
     /* TODO 2.8  SPI_CR2: 8-bit data frames, and a receive FIFO threshold that
      *           reports a received byte after 8 bits. Read the RM0091
      *           description of the FIFO threshold carefully - on the STM32F0
