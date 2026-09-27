@@ -104,9 +104,19 @@ void task1_gpio_update(uint32_t now)
     }
     t1_last = now;
 
+
     /* TODO 1.8  Toggle PC13: read its present level, then drive the opposite
      *           level. There are set-only and reset-only registers as well as
      *           ODR - be ready to say why you chose the one you used. */
+
+    if ((*pGPIOC_ODR & (1UL << 13)) != 0U)
+    {
+        *pGPIOC_BRR = (1UL << 13);
+    }
+    else
+    {
+        *pGPIOC_BSRR = (1UL << 13);
+    }
 
     task1_toggle_count++;
 }
