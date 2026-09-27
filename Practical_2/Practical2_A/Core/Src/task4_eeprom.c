@@ -35,7 +35,17 @@ uint8_t eeprom_read_status(void)
      *           more byte to receive the status, deselect, and return it.
      *           Be ready to explain why you have to SEND a byte in order to
      *           RECEIVE one. */
-    return 0u;
+
+    uint8_t status;
+
+    eeprom_cs_low();
+
+    spi_transfer(EEPROM_CMD_RDSR);
+    status = spi_transfer(0x00u);
+
+    eeprom_cs_high();
+
+    return status;
 }
 
 void eeprom_write_enable(void)
