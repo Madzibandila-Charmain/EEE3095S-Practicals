@@ -54,6 +54,10 @@ void eeprom_write_enable(void)
      *           transaction. Check the datasheet: at what point does the write
      *           enable latch actually get set? That decides whether this could
      *           share a transaction with the write itself. */
+
+    eeprom_cs_low();
+    spi_transfer(EEPROM_CMD_WREN);
+    eeprom_cs_high();
 }
 
 void eeprom_write_byte(uint16_t address, uint8_t value)
