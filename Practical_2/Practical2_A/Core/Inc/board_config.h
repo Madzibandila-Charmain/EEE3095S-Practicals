@@ -116,8 +116,8 @@
  *           against the build (TODO 3.2 in main.c). */
 
  /* Note to Mosa: i added the student numbers.*/
-#define STUDENT_N1              10u          /* <- TODO */
-#define STUDENT_N2              5u          /* <- TODO */
+#define STUDENT_N1              5u          /* <- TODO */
+#define STUDENT_N2              10u          /* <- TODO */
 
 /* The formulas from the handout. */
 #define TEST_BYTE_B_RAW         ((((STUDENT_N1 ^ STUDENT_N2) + 0x3Du)) % 256u)
