@@ -36,7 +36,19 @@
  *           typedef enum { ... } ee_state_t;
  */
 
-volatile uint8_t ee_state       = 0u;
+typedef enum
+{
+    EE_IDLE = 0,
+    EE_WRITE_PREPARE,
+    EE_WRITE,
+    EE_WAIT_READY,
+    EE_READ,
+    EE_VERIFY,
+    EE_SUCCESS,
+    EE_FAILURE
+} ee_state_t;
+
+volatile ee_state_t ee_state = EE_IDLE;
 volatile uint8_t ee_last_read   = 0u;
 volatile uint8_t ee_use_fsm     = 1u;
 
