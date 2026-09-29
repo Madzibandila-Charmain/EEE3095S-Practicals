@@ -70,32 +70,66 @@ void update_eeprom_state_machine(uint32_t now)
     switch (ee_state)
     {
         case EE_IDLE:
-            if (btn_start_edge)
-            {
+            if (btn_start_edge){
                 btn_start_edge = 0u;
                 ee_state = EE_WRITE_PREPARE;
             }
             break;
 
         case EE_WRITE_PREPARE:
+            eeprom_write_enable();
+            ee_state = EE_WRITE;
             break;
 
         case EE_WRITE:
+
+            eeprom_cs_low();
+
+            spi_transfer(EEPROM_CMD_WRITE);
+            spi_transfer((uint8_t)(eeprom_test_addr >> 8));
+            spi_transfer((uint8_t)(eeprom_test_addr & 0xFFu));
+            spi_transfer(eeprom_test_byte);
+
+            eeprom_cs_high();
+
+            ee_state = EE_WAIT_READY;
             break;
 
         case EE_WAIT_READY:
+
+            if ((eeprom_read_status() & EEPROM_SR_RDY) == 0u){
+                ee_state = EE_READ;
+            }
             break;
 
         case EE_READ:
+
+            ee_last_read = eeprom_read_byte(eeprom_test_addr);
+            ee_state = EE_VERIFY;
             break;
 
         case EE_VERIFY:
+
+            if (ee_last_read == eeprom_test_byte){
+                ee_state = EE_SUCCESS;
+            }
+            else{
+                ee_state = EE_FAILURE;
+            }
             break;
 
         case EE_SUCCESS:
+
+            update_outputs();
+            ee_state = EE_IDLE;
+
             break;
 
         case EE_FAILURE:
+
+            update_outputs();
+            ee_state = EE_IDLE;
+            
             break;
 
         default:
