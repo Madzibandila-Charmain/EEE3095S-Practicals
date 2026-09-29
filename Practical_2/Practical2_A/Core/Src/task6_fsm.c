@@ -48,7 +48,7 @@ typedef enum
     EE_FAILURE
 } ee_state_t;
 
-volatile ee_state_t ee_state = EE_IDLE;
+volatile uint8_t ee_state = EE_IDLE;
 volatile uint8_t ee_last_read   = 0u;
 volatile uint8_t ee_use_fsm     = 1u;
 
@@ -66,6 +66,43 @@ void update_eeprom_state_machine(uint32_t now)
      *     reports ready.
      *   - Store the byte read back in ee_last_read.
      *   - Clear each button edge once you have acted on it. */
+
+    switch (ee_state)
+    {
+        case EE_IDLE:
+            if (btn_start_edge)
+            {
+                btn_start_edge = 0u;
+                ee_state = EE_WRITE_PREPARE;
+            }
+            break;
+
+        case EE_WRITE_PREPARE:
+            break;
+
+        case EE_WRITE:
+            break;
+
+        case EE_WAIT_READY:
+            break;
+
+        case EE_READ:
+            break;
+
+        case EE_VERIFY:
+            break;
+
+        case EE_SUCCESS:
+            break;
+
+        case EE_FAILURE:
+            break;
+
+        default:
+            ee_state = EE_IDLE;
+            break;
+    }
+
     (void)now;
 }
 
