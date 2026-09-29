@@ -129,7 +129,7 @@ void update_eeprom_state_machine(uint32_t now)
 
             update_outputs();
             ee_state = EE_IDLE;
-            
+
             break;
 
         default:
@@ -146,6 +146,16 @@ void update_outputs(void)
      *           successful verification, red after a failed one
      *           (status_leds_show). Decide what the status LEDs should show
      *           while a transaction is in progress, and after an abort. */
+
+    leds_write_byte(ee_last_read);
+
+    if (ee_state == EE_SUCCESS){
+        status_leds_show(STATUS_PASS);
+    }
+
+    else if (ee_state == EE_FAILURE){
+        status_leds_show(STATUS_FAIL);
+    }
 }
 
 /* ==========================================================================
