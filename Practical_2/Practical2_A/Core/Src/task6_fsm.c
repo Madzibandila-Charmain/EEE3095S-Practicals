@@ -45,7 +45,8 @@ typedef enum
     EE_READ,
     EE_VERIFY,
     EE_SUCCESS,
-    EE_FAILURE
+    EE_FAILURE,
+    EE_ABORT        /* 8  PA3: clear write latch, status LEDs off, then idle     */
 } ee_state_t;
 
 volatile uint8_t ee_state = EE_IDLE;
@@ -67,77 +68,114 @@ void update_eeprom_state_machine(uint32_t now)
      *   - Store the byte read back in ee_last_read.
      *   - Clear each button edge once you have acted on it. */
 
-    switch (ee_state)
+        static uint32_t t_write_done = 0u;   /* tick when the WRITE transaction ended  */
+    static uint32_t t_last_poll  = 0u;   /* tick of the last status-register check */
+    uint8_t status;
+
+    /* PA3: abandon whatever is in progress. Ignored when already idle. */
+    if (btn_abort_edge)
     {
-        case EE_IDLE:
-            if (btn_start_edge){
-                btn_start_edge = 0u;
-                ee_state = EE_WRITE_PREPARE;
-            }
-            break;
-
-        case EE_WRITE_PREPARE:
-            eeprom_write_enable();
-            ee_state = EE_WRITE;
-            break;
-
-        case EE_WRITE:
-
-            eeprom_cs_low();
-
-            spi_transfer(EEPROM_CMD_WRITE);
-            spi_transfer((uint8_t)(eeprom_test_addr >> 8));
-            spi_transfer((uint8_t)(eeprom_test_addr & 0xFFu));
-            spi_transfer(eeprom_test_byte);
-
-            eeprom_cs_high();
-
-            ee_state = EE_WAIT_READY;
-            break;
-
-        case EE_WAIT_READY:
-
-            if ((eeprom_read_status() & EEPROM_SR_RDY) == 0u){
-                ee_state = EE_READ;
-            }
-            break;
-
-        case EE_READ:
-
-            ee_last_read = eeprom_read_byte(eeprom_test_addr);
-            ee_state = EE_VERIFY;
-            break;
-
-        case EE_VERIFY:
-
-            if (ee_last_read == eeprom_test_byte){
-                ee_state = EE_SUCCESS;
-            }
-            else{
-                ee_state = EE_FAILURE;
-            }
-            break;
-
-        case EE_SUCCESS:
-
-            update_outputs();
-            ee_state = EE_IDLE;
-
-            break;
-
-        case EE_FAILURE:
-
-            update_outputs();
-            ee_state = EE_IDLE;
-
-            break;
-
-        default:
-            ee_state = EE_IDLE;
-            break;
+        btn_abort_edge = 0u;
+        if (ee_state != EE_IDLE)
+        {
+            btn_start_edge = 0u;
+            ee_state = EE_ABORT;
+            return;                       /* update_outputs() shows the abort first */
+        }
     }
 
-    (void)now;
+    switch (ee_state)
+    {
+    case EE_IDLE:
+    case EE_SUCCESS:
+    case EE_FAILURE:
+        if (btn_start_edge)
+        {
+            btn_start_edge = 0u;
+            ee_state = EE_WRITE_PREPARE;
+        }
+        break;
+
+    case EE_WRITE_PREPARE:
+        if (eeprom_test_addr >= EEPROM_SIZE_BYTES)
+        {
+            eeprom_verify_ok = 0u;
+            ee_state = EE_FAILURE;
+            break;
+        }
+        eeprom_write_enable();
+        status = eeprom_read_status();
+        if (status & EEPROM_SR_WEL)
+        {
+            ee_state = EE_WRITE;
+        }
+        else
+        {
+            eeprom_verify_ok = 0u;        /* latch not set: a write would be ignored */
+            ee_state = EE_FAILURE;
+        }
+        break;
+
+    case EE_WRITE:
+        eeprom_cs_low();
+        spi_transfer(EEPROM_CMD_WRITE);
+        spi_transfer((uint8_t)(eeprom_test_addr >> 8));
+        spi_transfer((uint8_t)(eeprom_test_addr & 0xFFu));
+        spi_transfer(eeprom_test_byte);
+        eeprom_cs_high();                 /* the internal write starts on this rising edge */
+        t_write_done = now;
+        t_last_poll  = now;
+        ee_state = EE_WAIT_READY;
+        break;
+
+    case EE_WAIT_READY:
+        if ((uint32_t)(now - t_last_poll) < 1u)
+        {
+            break;                        /* next status check not due: return to the main loop */
+        }
+        t_last_poll = now;
+        status = eeprom_read_status();
+        if ((status & EEPROM_SR_RDY) == 0u)
+        {
+            eeprom_write_wait_ms = (uint32_t)(now - t_write_done);
+            ee_state = EE_READ;
+        }
+        else if ((uint32_t)(now - t_write_done) >= EEPROM_WRITE_TIMEOUT_MS)
+        {
+            eeprom_timeout_count++;       /* EEPROM never reported ready */
+            eeprom_verify_ok = 0u;
+            ee_state = EE_FAILURE;
+        }
+        break;
+
+    case EE_READ:
+        ee_last_read = eeprom_read_byte(eeprom_test_addr);
+        ee_state = EE_VERIFY;
+        break;
+
+    case EE_VERIFY:
+        eeprom_read_value = ee_last_read;
+        eeprom_verify_ok  = (ee_last_read == eeprom_test_byte) ? 1u : 0u;
+        ee_state = (eeprom_verify_ok != 0u) ? EE_SUCCESS : EE_FAILURE;
+        break;
+
+    case EE_ABORT:
+        eeprom_cs_low();                  /* clear the write-enable latch; bus is idle, CS high afterwards */
+        spi_transfer(EEPROM_CMD_WRDI);
+        eeprom_cs_high();
+        ee_state = EE_IDLE;
+        break;
+
+    default:
+        ee_state = EE_IDLE;
+        break;
+    }
+
+    /* A PA0 press during a transaction must not queue up a second write. */
+    if ((ee_state != EE_IDLE) && (ee_state != EE_SUCCESS) && (ee_state != EE_FAILURE))
+    {
+        btn_start_edge = 0u;
+    }
 }
 
 void update_outputs(void)
@@ -149,12 +187,12 @@ void update_outputs(void)
 
     leds_write_byte(ee_last_read);
 
-    if (ee_state == EE_SUCCESS){
-        status_leds_show(STATUS_PASS);
-    }
+    switch (ee_state){
 
-    else if (ee_state == EE_FAILURE){
-        status_leds_show(STATUS_FAIL);
+        case EE_SUCCESS: status_leds_show(STATUS_PASS); break;   /* green */
+        case EE_FAILURE:    status_leds_show(STATUS_FAIL); break;   /* red   */
+        case EE_IDLE:    break;      /* leave the boot result (or the last result) showing */
+        default:         status_leds_show(STATUS_OFF);  break;   /* in progress or aborted: both off */
     }
 }
 
@@ -181,6 +219,9 @@ void task6_setup(void)
     /* TODO 6.4  Your state machine starts in its idle state. Make sure the
      *           boot-time result (eeprom_verify_ok) still shows on the status
      *           LEDs, so a reset still shows green for the persistence test. */
+
+    ee_state = EE_IDLE;   /* eeprom_read_only_path() already put the boot result on the status LEDs;
+                             update_outputs() leaves them alone while idle */
 }
 
 void task6_loop(uint32_t now)

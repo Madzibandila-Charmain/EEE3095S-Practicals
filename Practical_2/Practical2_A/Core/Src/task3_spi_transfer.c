@@ -24,10 +24,12 @@ void eeprom_cs_high(void)
      *           status flags to wait for (see its procedure for disabling the
      *           SPI). Raising CS early cuts the end off a command. */
 	//while the tx buffer isn't empty, do nothing
-	while(!(EE_SPI->SR & SPI_SR_TXE));
+    uint32_t t = HAL_GetTick();
+
+	while (!(EE_SPI->SR & SPI_SR_TXE) && ((uint32_t)(HAL_GetTick() - t) < 5u));
 	
 	//ensures spi finishes sending last bit
-	while(EE_SPI->SR & SPI_SR_BSY);
+	while ((EE_SPI->SR & SPI_SR_BSY) && ((uint32_t)(HAL_GetTick() - t) < 5u));
 	//CS HIGH
 	EE_SPI_GPIO->BSRR = EE_CS_MASK;
 	
@@ -39,9 +41,13 @@ void eeprom_cs_high(void)
 
 uint8_t spi_transfer(uint8_t tx)
 {
+    uint32_t t = HAL_GetTick();
+
     /* TODO 3.4  Wait until the transmit buffer has room (SPI_SR). */
 	
-	while(!(EE_SPI->SR & SPI_SR_TXE));
+	while(!(EE_SPI->SR & SPI_SR_TXE)){
+        if ((uint32_t)(HAL_GetTick() - t) > 5u) { return 0xFFu; }
+    }
 	
     /* TODO 3.5  Write tx to the data register.
      *           HINT: SPI_DR is declared 16 bits wide in the CMSIS header,
@@ -53,10 +59,11 @@ uint8_t spi_transfer(uint8_t tx)
     /* TODO 3.6  Wait for the received byte (SPI_SR), then read it from the
      *           data register and return it. Read it every time, even when
      *           you do not need the value. */
-	while(!(EE_SPI->SR & SPI_SR_RXNE));
+	while(!(EE_SPI->SR & SPI_SR_RXNE)){
+        if ((uint32_t)(HAL_GetTick() - t) > 5u) { return 0xFFu; }
+    }
 	
-	uint8_t ans = *(volatile uint8_t *) & EE_SPI ->DR;
-	return ans;
+	return *(volatile uint8_t *)&EE_SPI->DR;
 }
 
 /* ==========================================================================

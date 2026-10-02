@@ -63,6 +63,7 @@ void eeprom_write_enable(void)
 void eeprom_write_byte(uint16_t address, uint8_t value)
 {
     uint32_t start;
+    uint8_t  st;
 
     if (address >= EEPROM_SIZE_BYTES)
     {
@@ -74,6 +75,13 @@ void eeprom_write_byte(uint16_t address, uint8_t value)
      *           data byte, and deselect. From the datasheet: at what moment
      *           does the EEPROM actually start writing? */
 
+    eeprom_write_enable();                      /* WEL must be set before every write */
+    st = eeprom_read_status();
+    if ((st & EEPROM_SR_WEL) == 0u)
+    {
+        return;                                 /* latch not set: the write would be ignored */
+    }
+
     eeprom_cs_low();
 
     spi_transfer(EEPROM_CMD_WRITE);
@@ -81,12 +89,14 @@ void eeprom_write_byte(uint16_t address, uint8_t value)
     spi_transfer((uint8_t)(address & 0xFFu));
     spi_transfer(value);
 
+    eeprom_cs_high();
+
     /* TODO 4.6  Wait for the write to finish by POLLING THE STATUS REGISTER.
      *           Bound the loop with EEPROM_WRITE_TIMEOUT_MS so a missing
      *           device cannot hang the board (count timeouts in
      *           eeprom_timeout_count), and record how long the write took in
      *           eeprom_write_wait_ms - your report needs that figure. */
-    eeprom_cs_high();
+    
     start = HAL_GetTick();
 
     while (eeprom_read_status() & EEPROM_SR_RDY)
@@ -94,6 +104,7 @@ void eeprom_write_byte(uint16_t address, uint8_t value)
         if ((uint32_t)(HAL_GetTick() - start) >= EEPROM_WRITE_TIMEOUT_MS)
         {
             eeprom_timeout_count++;
+            eeprom_write_wait_ms = EEPROM_WRITE_TIMEOUT_MS;
             return;
         }
     }
@@ -172,7 +183,6 @@ void eeprom_write_verify_path(void)
 
     eeprom_status_before = eeprom_read_status();
 
-    eeprom_write_enable();
     eeprom_write_byte(eeprom_test_addr, eeprom_test_byte);
 
     eeprom_status_after = eeprom_read_status();
