@@ -121,6 +121,24 @@ uint16_t voltage_mirror_map(uint16_t code, bool coarse)
      * the six most significant bits and clears the six least significant.
      * Retain the 12-bit DAC scale: do not send a 0..63 code directly.
      */
-    (void)coarse;
+
+    /* Keep the input within the 12-bit ADC range. */
+    if (code > 4095U)
+    {
+        code = 4095U;
+    }
+
+    if (coarse)
+    {
+        /* Clear the six least significant bits.
+           The result remains on the 12-bit DAC scale. */
+        code = (uint16_t)((code / 64U) * 64U);
+    }
+
+    /* FULL12 returns the original code.
+       COARSE6 returns the rounded-down multiple of 64. */
     return code;
+
+    //(void)coarse;
+    //return code;
 }
