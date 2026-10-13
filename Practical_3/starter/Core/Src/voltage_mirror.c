@@ -39,7 +39,7 @@ bool voltage_mirror_init(void)
     DAC->CR = DAC_CR_EN1;
 
     /* Complete ADC enable using the supplied helper. */
-    return board_adc_enable()
+    return board_adc_enable();
 
     //return false; /* The uncompleted starter intentionally does not acquire. */
 }
@@ -103,7 +103,16 @@ bool voltage_mirror_read(uint16_t *code)
 void voltage_mirror_write(uint16_t code)
 {
     /* TODO 3: limit code to 0..4095 and write DAC->DHR12R1. */
-    (void)code;
+    if(code>4095){
+    	code = 4095;
+    }
+    else if (code<0){
+    	code = 0;
+    }
+    
+    //writing code instruction to DAC channel 1
+    DAC->DHR12R1 = code;
+	
 }
 
 uint16_t voltage_mirror_map(uint16_t code, bool coarse)
