@@ -52,8 +52,52 @@ bool voltage_mirror_read(uint16_t *code)
      * On timeout request ADSTP, then return false. Never wait forever.
      */
 
-    (void)code;
-    return false;
+    uint32_t timeout;
+    uint32_t result;
+
+    /* Reject an invalid destination pointer. */
+    if (code == 0)
+    {
+        return false;
+    }
+
+    /* Clear stale EOC, EOS and OVR flags.
+       These flags use write-one-to-clear behaviour. */
+    ADC1->ISR = ADC_ISR_EOC
+              | ADC_ISR_EOS
+              | ADC_ISR_OVR;
+
+    /* Start one software-triggered conversion. */
+    ADC1->CR |= ADC_CR_ADSTART;
+
+    /* Wait for the result, but never wait forever. */
+    timeout = 100000U;
+
+    while (((ADC1->ISR & ADC_ISR_EOC) == 0U)
+           && (timeout > 0U))
+    {
+        timeout--;
+    }
+
+    /* Handle a conversion timeout. */
+    if ((ADC1->ISR & ADC_ISR_EOC) == 0U)
+    {
+        /* Request that an ongoing conversion stop. */
+        ADC1->CR |= ADC_CR_ADSTP;
+
+        return false;
+    }
+
+    /* Read the actual ADC conversion result. */
+    result = ADC1->DR;
+
+    /* Keep the 12-bit result, from 0 to 4095. */
+    *code = (uint16_t)(result & 0x0FFFU);
+
+    return true;
+
+    //(void)code;
+    //return false;
 }
 
 void voltage_mirror_write(uint16_t code)
