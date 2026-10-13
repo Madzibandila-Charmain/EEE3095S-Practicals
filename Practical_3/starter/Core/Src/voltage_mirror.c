@@ -16,7 +16,32 @@ bool voltage_mirror_init(void)
      * Set ADC1->CFGR1, ADC1->CHSELR, ADC1->SMPR, DAC->DHR12R1 and DAC->CR.
      * Finish by returning board_adc_enable(). Remove the false return below.
      */
-    return false; /* The uncompleted starter intentionally does not acquire. */
+
+    /* ADC: 12-bit, right-aligned, software-triggered,
+       single conversions. */
+    ADC1->CFGR1 = 0;
+
+    /* Select ADC channel 5 only. */
+    ADC1->CHSELR = ADC_CHSELR_CHSEL5;
+
+    /* Sampling time = 239.5 ADC clock cycles. */
+    ADC1->SMPR = ADC_SMPR_SMP_0
+               | ADC_SMPR_SMP_1
+               | ADC_SMPR_SMP_2;
+
+    /* Configure DAC channel 1.
+       Load the initial half-scale command before enabling it. */
+    DAC->DHR12R1 = 2048U;
+
+    /* Enable DAC channel 1.
+       TEN1 = 0: software data update, no trigger.
+       BOFF1 = 0: output buffer enabled. */
+    DAC->CR = DAC_CR_EN1;
+
+    /* Complete ADC enable using the supplied helper. */
+    return board_adc_enable()
+
+    //return false; /* The uncompleted starter intentionally does not acquire. */
 }
 
 bool voltage_mirror_read(uint16_t *code)
@@ -26,6 +51,7 @@ bool voltage_mirror_read(uint16_t *code)
      * Return true only when *code contains a real acquired 12-bit result.
      * On timeout request ADSTP, then return false. Never wait forever.
      */
+
     (void)code;
     return false;
 }
